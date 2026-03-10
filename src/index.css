@@ -251,27 +251,62 @@ body {
     top: 10px;
     left: 10px;
     right: 10px;
-    height: auto;
-    flex-direction: column;
-    padding: 12px;
-    gap: 12px;
+    height: 60px;
+    /* Altura fixa para ser compacto */
+    padding: 0 16px;
+    flex-direction: row;
+    /* Título e contador na mesma linha */
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .game-header h1 {
+    font-size: 1.1rem;
   }
 
   .header-left {
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .progress-counter .count-label {
+    font-size: 0.8rem;
+  }
+
+  .fusion-zone {
+    margin-top: 70px;
+    /* Menor devido ao header compacto */
+    margin-bottom: 90px;
+    padding: 0 10px;
+    gap: 15px;
+  }
+
+  .hint-image {
+    height: 40vh;
+    /* Ajuste para dar mais espaço */
+    border-radius: 24px;
   }
 
   .elements-dock {
     bottom: 10px;
     left: 10px;
     right: 10px;
-    height: 100px;
+    height: 90px;
+    padding: 8px;
   }
 
-  .hint-container p {
-    font-size: 1rem;
-    padding: 20px;
+  .dock-content {
+    gap: 10px;
+  }
+
+  .element-card {
+    padding: 8px 12px;
+    min-width: 80px;
+  }
+
+  .element-name {
+    font-size: 0.75rem;
   }
 }
 
