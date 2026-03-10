@@ -8,7 +8,6 @@ const Element = ({ element, onClick, isGhost = false, style = {} }) => {
     return (
         <motion.div
             className={`element-card ${isGhost ? 'ghost' : ''}`}
-            layoutId={element.id}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             whileHover={{ scale: 1.05 }}

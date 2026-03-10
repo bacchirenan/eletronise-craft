@@ -2,180 +2,217 @@ import React, { useState, useEffect, useRef } from 'react';
 import Element from './components/Element';
 import { ELEMENTS } from './data/elements';
 import { RECIPES, SPECIAL_RESULTS } from './data/recipes';
+import { HINTS } from './data/hints';
 import { motion, AnimatePresence } from 'framer-motion';
+import { RotateCcw } from 'lucide-react';
 
 function App() {
   const [discoveredIds, setDiscoveredIds] = useState(['WATER', 'ENERGY', 'MINERALS', 'AIR']);
-  const [workspaceElements, setWorkspaceElements] = useState([]);
+  const [selectedElements, setSelectedElements] = useState([]);
   const [newDiscovery, setNewDiscovery] = useState(null);
-  const workspaceRef = useRef(null);
+  const [isCombining, setIsCombining] = useState(false);
 
-  // Carregar progresso salvo (opcional por enquanto)
+  const handleElementClick = (element) => {
+    if (selectedElements.length >= 2 || isCombining) return;
 
-  const handleSidebarClick = (element) => {
-    const newElement = {
+    // Criamos uma nova instância com ID único para permitir Metal + Metal
+    const newElementInstance = {
       ...element,
-      instanceId: Math.random().toString(36).substr(2, 9),
-      x: 50 + Math.random() * 50,
-      y: 50 + Math.random() * 50
+      instanceId: Math.random().toString(36).substr(2, 9)
     };
-    setWorkspaceElements([...workspaceElements, newElement]);
-  };
 
-  const handleDragEnd = (instanceId, info) => {
-    const draggedEl = workspaceElements.find(el => el.instanceId === instanceId);
-    if (!draggedEl) return;
+    const newSelection = [...selectedElements, newElementInstance];
+    setSelectedElements(newSelection);
 
-    // Atualiza posição
-    const newElements = workspaceElements.map(el => {
-      if (el.instanceId === instanceId) {
-        return { ...el, x: el.x + info.offset.x, y: el.y + info.offset.y };
-      }
-      return el;
-    });
+    if (newSelection.length === 2) {
+      setIsCombining(true);
 
-    // Checa colisões/combinações
-    const currentEl = newElements.find(el => el.instanceId === instanceId);
-    let combined = false;
+      // Descobrimos qual é o próximo objetivo baseado na dica atual
+      const nextGoal = HINTS.find(h => h.requirement(discoveredIds));
 
-    for (let otherEl of newElements) {
-      if (otherEl.instanceId === instanceId) continue;
-
-      const dist = Math.sqrt(
-        Math.pow(currentEl.x - otherEl.x, 2) + Math.pow(currentEl.y - otherEl.y, 2)
-      );
-
-      if (dist < 60) {
-        // Tenta combinar
-        const ingredients = [currentEl.id, otherEl.id].sort();
+      setTimeout(() => {
+        const ingredients = [newSelection[0].id, newSelection[1].id].sort();
         const recipe = RECIPES.find(r =>
           r.ingredients.length === 2 &&
           r.ingredients.slice().sort().every((val, index) => val === ingredients[index])
         );
 
-        if (recipe) {
+        // A fusão só ocorre se existir a receita E se o resultado for o que a dica está pedindo (progressão linear)
+        if (recipe && recipe.result === nextGoal?.goalId) {
           const resultId = recipe.result;
           const resultElement = ELEMENTS[resultId];
 
-          // Se for uma descoberta nova
           if (!discoveredIds.includes(resultId)) {
-            setDiscoveredIds([...discoveredIds, resultId]);
+            setDiscoveredIds(prev => [...prev, resultId]);
             setNewDiscovery(resultElement);
           }
 
-          // Cria o novo elemento no lugar da combinação
-          const combinedElement = {
-            ...resultElement,
-            instanceId: Math.random().toString(36).substr(2, 9),
-            x: (currentEl.x + otherEl.x) / 2,
-            y: (currentEl.y + otherEl.y) / 2
-          };
-
-          // Remove os dois antigos e adiciona o novo
-          // Se houver resultados especiais (como H2 + O2)
           if (SPECIAL_RESULTS[resultId]) {
-            const extraResults = SPECIAL_RESULTS[resultId].map((id, idx) => ({
-              ...ELEMENTS[id],
-              instanceId: Math.random().toString(36).substr(2, 9),
-              x: combinedElement.x + (idx * 40),
-              y: combinedElement.y
-            }));
-
-            // Adiciona descoberta dos extras também
-            const newDiscovered = [...discoveredIds, resultId];
-            SPECIAL_RESULTS[resultId].forEach(id => {
-              if (!newDiscovered.includes(id)) newDiscovered.push(id);
+            setDiscoveredIds(prev => {
+              const newIds = [...prev];
+              SPECIAL_RESULTS[resultId].forEach(id => {
+                if (!newIds.includes(id)) newIds.push(id);
+              });
+              return newIds;
             });
-            setDiscoveredIds(newDiscovered);
-
-            setWorkspaceElements(
-              newElements
-                .filter(el => el.instanceId !== instanceId && el.instanceId !== otherEl.instanceId)
-                .concat(extraResults)
-            );
-          } else {
-            setWorkspaceElements(
-              newElements
-                .filter(el => el.instanceId !== instanceId && el.instanceId !== otherEl.instanceId)
-                .concat(combinedElement)
-            );
           }
-          combined = true;
-          break;
-        }
-      }
-    }
 
-    if (!combined) {
-      setWorkspaceElements(newElements);
+          setSelectedElements([]);
+        } else {
+          // Se não for a hora certa ou a receita estiver errada, os elementos voltam para a barra
+          setTimeout(() => {
+            setSelectedElements([]);
+          }, 800);
+        }
+        setIsCombining(false);
+      }, 600);
     }
   };
 
-  // Lógica para combinação tripla (específica para o Kit)
-  // Pode ser implementada depois se o usuário quiser mais complexidade.
-  // Por enquanto vamos simplificar a receita do Kit para ser Bateria + Fio + Eletrodo em passos.
+  const currentHint = HINTS.find(h => h.requirement(discoveredIds));
 
+  const handleReset = () => {
+    if (window.confirm('Deseja reiniciar o jogo? Todo o progresso será perdido.')) {
+      setDiscoveredIds(['WATER', 'ENERGY', 'MINERALS', 'AIR']);
+      setSelectedElements([]);
+      setNewDiscovery(null);
+    }
+  };
   return (
     <div className="app-container">
-      <aside className="sidebar">
-        <h1>Eletrólise Craft</h1>
-        <div className="elements-list">
+      <header className="game-header">
+        <div className="header-left">
+          <h1>Eletrólise Craft</h1>
+          <div className="progress-counter">
+            <span className="count-label">Faltam {Object.keys(ELEMENTS).length - discoveredIds.length} elementos</span>
+          </div>
+        </div>
+        <button className="reset-button" onClick={handleReset} title="Reiniciar Jogo">
+          <RotateCcw size={20} />
+        </button>
+      </header>
+
+      <main className="workspace">
+        <div className="fusion-zone">
+          {/* Lado Esquerdo (Primeiro Elemento) */}
+          <div className="fusion-slot left">
+            <AnimatePresence>
+              {selectedElements[0] && (
+                <motion.div
+                  key={selectedElements[0].instanceId}
+                  initial={{ opacity: 0, x: -50, scale: 0.5 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0, y: 50 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                >
+                  <Element element={selectedElements[0]} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Centro (Personagem de Dicas) */}
+          <div className="fusion-character">
+            <AnimatePresence mode="wait">
+              {currentHint && (
+                <motion.div
+                  key={currentHint.image}
+                  className="hint-container-inner"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.1 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <img
+                    src={currentHint.image}
+                    alt={currentHint.message}
+                    className="hint-image"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Lado Direito (Segundo Elemento) */}
+          <div className="fusion-slot right">
+            <AnimatePresence>
+              {selectedElements[1] && (
+                <motion.div
+                  key={selectedElements[1].instanceId}
+                  initial={{ opacity: 0, x: 50, scale: 0.5 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0, y: 50 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                >
+                  <Element element={selectedElements[1]} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </main>
+
+      <footer className="elements-dock">
+        <div className="dock-content">
           {discoveredIds.map(id => (
             <Element
               key={id}
               element={ELEMENTS[id]}
-              onClick={handleSidebarClick}
+              onClick={() => handleElementClick(ELEMENTS[id])}
             />
           ))}
         </div>
-      </aside>
-
-      <main className="workspace" ref={workspaceRef}>
-        <AnimatePresence>
-          {workspaceElements.map((el) => (
-            <motion.div
-              key={el.instanceId}
-              drag
-              dragMomentum={false}
-              onDragEnd={(e, info) => handleDragEnd(el.instanceId, info)}
-              className="workspace-element"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1, x: el.x, y: el.y }}
-              exit={{ scale: 0 }}
-              style={{ position: 'absolute', left: 0, top: 0 }}
-            >
-              <Element element={el} />
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </main>
+      </footer>
 
       <AnimatePresence>
         {newDiscovery && (
           <motion.div
-            className="discovery-popup"
-            initial={{ opacity: 0, scale: 0.5, y: 100 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.5 }}
+            className="discovery-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            <h2>Nova Descoberta!</h2>
-            <Element element={newDiscovery} style={{ margin: '0 auto 20px', width: '120px' }} />
-            <p style={{ color: '#7d8590' }}>{newDiscovery.description}</p>
-            <button
-              onClick={() => setNewDiscovery(null)}
-              style={{
-                marginTop: '30px',
-                padding: '10px 30px',
-                background: '#3b82f6',
-                border: 'none',
-                borderRadius: '8px',
-                color: 'white',
-                cursor: 'pointer',
-                fontWeight: '600'
-              }}
+            <motion.div
+              className="discovery-popup"
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              style={{ borderColor: newDiscovery.color }}
             >
-              Continuar
-            </button>
+              <h2 style={{ fontSize: '2rem', marginBottom: '30px', color: newDiscovery.color }}>
+                Nova Descoberta!
+              </h2>
+              <Element element={newDiscovery} style={{ margin: '0 auto 30px', width: '140px', padding: '20px' }} />
+              <p style={{ color: '#94a3b8', fontSize: '1.2rem', marginBottom: '40px', lineHeight: '1.6' }}>
+                {newDiscovery.description}
+              </p>
+              <button
+                onClick={() => setNewDiscovery(null)}
+                style={{
+                  padding: '15px 50px',
+                  background: newDiscovery.color,
+                  border: 'none',
+                  borderRadius: '12px',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  fontSize: '1.1rem',
+                  transition: 'transform 0.2s, filter 0.2s',
+                  boxShadow: `0 4px 20px ${newDiscovery.color}66`
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'scale(1.05)';
+                  e.target.style.filter = 'brightness(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'scale(1)';
+                  e.target.style.filter = 'brightness(1)';
+                }}
+              >
+                Continuar Lab
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
