@@ -21,7 +21,8 @@ body {
   background-color: var(--bg-color);
   color: var(--text-primary);
   overflow: hidden;
-  height: 100vh;
+  height: 100dvh;
+  /* Dynamic Viewport Height para mobile */
   width: 100vw;
 }
 
@@ -175,12 +176,11 @@ body {
   justify-content: center;
   gap: 60px;
   width: 100%;
-  height: 100%;
+  height: calc(100% - 210px);
+  /* Total do header + dock + margens */
+  margin-top: 90px;
+  /* Desce para baixo do header */
   padding: 0 40px;
-  margin-top: 50px;
-  /* Compensa o header */
-  margin-bottom: 100px;
-  /* Compensa o dock */
 }
 
 .fusion-slot {
