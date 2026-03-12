@@ -9,7 +9,7 @@ import StartScreen from './components/StartScreen';
 import EndScreen from './components/EndScreen';
 
 function App() {
-  const [discoveredIds, setDiscoveredIds] = useState(['WATER', 'ENERGY', 'MINERALS', 'AIR']);
+  const [discoveredIds, setDiscoveredIds] = useState(['WATER', 'ENERGY', 'MINERALS']);
   const [selectedElements, setSelectedElements] = useState([]);
   const [newDiscovery, setNewDiscovery] = useState(null);
   const [isCombining, setIsCombining] = useState(false);
@@ -98,7 +98,7 @@ function App() {
 
   const handleReset = () => {
     if (window.confirm('Deseja reiniciar o jogo? Todo o progresso será perdido.')) {
-      setDiscoveredIds(['WATER', 'ENERGY', 'MINERALS', 'AIR']);
+      setDiscoveredIds(['WATER', 'ENERGY', 'MINERALS']);
       setSelectedElements([]);
       setNewDiscovery(null);
       setShowEndScreen(false);
@@ -107,7 +107,7 @@ function App() {
   };
 
   const handleRestart = () => {
-    setDiscoveredIds(['WATER', 'ENERGY', 'MINERALS', 'AIR']);
+    setDiscoveredIds(['WATER', 'ENERGY', 'MINERALS']);
     setSelectedElements([]);
     setNewDiscovery(null);
     setShowEndScreen(false);

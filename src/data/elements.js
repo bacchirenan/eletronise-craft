@@ -23,14 +23,7 @@ export const ELEMENTS = {
     description: 'Sais que ajudam na condutividade.',
     isInitial: true
   },
-  AIR: {
-    id: 'AIR',
-    name: 'Ar',
-    icon: 'Wind',
-    color: '#94a3b8',
-    description: 'Presente em todo lugar.',
-    isInitial: true
-  },
+
   METAL: {
     id: 'METAL',
     name: 'Metal',
