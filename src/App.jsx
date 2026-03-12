@@ -5,12 +5,26 @@ import { RECIPES, SPECIAL_RESULTS } from './data/recipes';
 import { HINTS } from './data/hints';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RotateCcw } from 'lucide-react';
+import StartScreen from './components/StartScreen';
+import EndScreen from './components/EndScreen';
 
 function App() {
   const [discoveredIds, setDiscoveredIds] = useState(['WATER', 'ENERGY', 'MINERALS', 'AIR']);
   const [selectedElements, setSelectedElements] = useState([]);
   const [newDiscovery, setNewDiscovery] = useState(null);
   const [isCombining, setIsCombining] = useState(false);
+  const [showStartScreen, setShowStartScreen] = useState(true);
+  const [showEndScreen, setShowEndScreen] = useState(false);
+  const [failureCount, setFailureCount] = useState(0);
+
+  useEffect(() => {
+    if (discoveredIds.includes('ELECTROLYSIS_DONE')) {
+      const timer = setTimeout(() => {
+        setShowEndScreen(true);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [discoveredIds]);
 
   const handleElementClick = (element) => {
     if (selectedElements.length >= 2 || isCombining) return;
@@ -45,6 +59,7 @@ function App() {
           if (!discoveredIds.includes(resultId)) {
             setDiscoveredIds(prev => [...prev, resultId]);
             setNewDiscovery(resultElement);
+            setFailureCount(0);
           }
 
           if (SPECIAL_RESULTS[resultId]) {
@@ -60,6 +75,7 @@ function App() {
           setSelectedElements([]);
         } else {
           // Se não for a hora certa ou a receita estiver errada, os elementos voltam para a barra
+          setFailureCount(prev => prev + 1);
           setTimeout(() => {
             setSelectedElements([]);
           }, 800);
@@ -71,15 +87,44 @@ function App() {
 
   const currentHint = HINTS.find(h => h.requirement(discoveredIds));
 
+  // Lógica de ajuda: se errar 4 vezes, destaca os ingredientes necessários
+  const getHighlightedIds = () => {
+    if (failureCount < 4 || !currentHint?.goalId) return [];
+    const recipe = RECIPES.find(r => r.result === currentHint.goalId);
+    return recipe ? recipe.ingredients : [];
+  };
+
+  const highlightedIds = getHighlightedIds();
+
   const handleReset = () => {
     if (window.confirm('Deseja reiniciar o jogo? Todo o progresso será perdido.')) {
       setDiscoveredIds(['WATER', 'ENERGY', 'MINERALS', 'AIR']);
       setSelectedElements([]);
       setNewDiscovery(null);
+      setShowEndScreen(false);
+      setFailureCount(0);
     }
   };
+
+  const handleRestart = () => {
+    setDiscoveredIds(['WATER', 'ENERGY', 'MINERALS', 'AIR']);
+    setSelectedElements([]);
+    setNewDiscovery(null);
+    setShowEndScreen(false);
+    setFailureCount(0);
+  };
+
   return (
     <div className="app-container">
+      <AnimatePresence>
+        {showStartScreen && (
+          <StartScreen onStart={() => setShowStartScreen(false)} />
+        )}
+        {showEndScreen && (
+          <EndScreen onRestart={handleRestart} />
+        )}
+      </AnimatePresence>
+
       <header className="game-header">
         <div className="header-left">
           <h1>Eletrólise Craft</h1>
@@ -159,6 +204,7 @@ function App() {
               key={id}
               element={ELEMENTS[id]}
               onClick={() => handleElementClick(ELEMENTS[id])}
+              isHighlighted={highlightedIds.includes(id)}
             />
           ))}
         </div>

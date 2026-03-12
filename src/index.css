@@ -95,6 +95,7 @@ body {
 
 .dock-content {
   display: flex;
+  justify-content: center;
   gap: 16px;
   overflow-x: auto;
   padding: 8px 12px;
@@ -112,6 +113,28 @@ body {
   border-radius: 10px;
 }
 
+/* Ajuda e Destaques */
+.element-card.highlighted {
+  border-color: white !important;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+  z-index: 2;
+}
+
+.highlight-glow {
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  filter: blur(10px);
+  opacity: 0.4;
+  z-index: -1;
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
 /* Workspace area */
 .workspace {
   position: absolute;
@@ -121,53 +144,6 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-}
-
-.fusion-zone {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 40px;
-  height: 200px;
-  width: 100%;
-  margin-bottom: 20px;
-  position: relative;
-}
-
-.selected-element {
-  z-index: 10;
-}
-
-/* Discoveries & Notifications */
-.discovery-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.discovery-popup {
-  background: rgba(23, 23, 23, 0.95);
-  border: 1px solid var(--accent-blue);
-  padding: 60px 40px;
-  border-radius: 32px;
-  text-align: center;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 0 100px rgba(59, 130, 246, 0.4);
-  position: relative;
-}
-
-.discovery-popup h2 {
-  color: var(--accent-blue);
-  margin-bottom: 20px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
 }
 
 .fusion-zone {
@@ -218,46 +194,51 @@ body {
   transition: all 0.5s ease;
 }
 
-@media (max-width: 1024px) {
-  .fusion-zone {
-    gap: 30px;
-  }
+.selected-element {
+  z-index: 10;
 }
 
-@media (max-width: 768px) {
-  .fusion-zone {
-    flex-wrap: wrap;
-    gap: 20px;
-  }
-
-  .fusion-slot {
-    order: 2;
-    flex: 0 0 45%;
-  }
-
-  .fusion-character {
-    order: 1;
-    flex: 0 0 100%;
-  }
-
-  .hint-image {
-    height: 35vh;
-  }
+/* Discoveries & Notifications */
+.discovery-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
 
-/* Responsividade */
+.discovery-popup {
+  background: rgba(23, 23, 23, 0.95);
+  border: 1px solid var(--accent-blue);
+  padding: 60px 40px;
+  border-radius: 32px;
+  text-align: center;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 0 100px rgba(59, 130, 246, 0.4);
+  position: relative;
+}
+
+.discovery-popup h2 {
+  color: var(--accent-blue);
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* Responsividade Mobile Extrema */
 @media (max-width: 768px) {
   .game-header {
     top: 10px;
     left: 10px;
     right: 10px;
     height: 60px;
-    /* Altura fixa para ser compacto */
     padding: 0 16px;
-    flex-direction: row;
-    /* Título e contador na mesma linha */
     justify-content: space-between;
-    gap: 8px;
   }
 
   .game-header h1 {
@@ -265,8 +246,6 @@ body {
   }
 
   .header-left {
-    flex-direction: row;
-    align-items: center;
     gap: 12px;
   }
 
@@ -276,15 +255,26 @@ body {
 
   .fusion-zone {
     margin-top: 70px;
-    /* Menor devido ao header compacto */
     margin-bottom: 90px;
     padding: 0 10px;
     gap: 15px;
+    flex-wrap: wrap;
+    align-content: center;
+  }
+
+  .fusion-slot {
+    order: 2;
+    flex: 0 0 45%;
+    min-width: 80px;
+  }
+
+  .fusion-character {
+    order: 1;
+    flex: 0 0 100%;
   }
 
   .hint-image {
-    height: 40vh;
-    /* Ajuste para dar mais espaço */
+    height: 35vh;
     border-radius: 24px;
   }
 
@@ -311,14 +301,6 @@ body {
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
-  .sidebar {
-    width: 200px;
-    height: 100%;
-    max-height: 100%;
-    border-right: 1px solid var(--glass-border);
-    border-bottom: none;
-  }
-
   .app-container {
     flex-direction: row;
   }
