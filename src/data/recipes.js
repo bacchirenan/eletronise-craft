@@ -16,7 +16,7 @@ export const RECIPES = [
         result: 'SALINE_WATER'
     },
     {
-        ingredients: ['METAL', 'SALINE_WATER'],
+        ingredients: ['ENERGY', 'ELECTRODES'],
         result: 'BATTERY'
     },
     {
